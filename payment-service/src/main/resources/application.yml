@@ -5,10 +5,12 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BROKER:localhost:9092}
     topic:
-      teste: teste
-      consumer:
-        group-id: payment-group
-        auto-offset-reset: latest
+      orchestrator: orchestrator
+      payment-success: payment-success
+      payment-fail: payment-fail
+    consumer:
+      group-id: payment-group
+      auto-offset-reset: latest
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5434}/${DB_NAME:payment-db}
