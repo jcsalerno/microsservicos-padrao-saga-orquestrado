@@ -63,7 +63,7 @@ O padrão Saga garante consistência de dados em sistemas distribuídos, dividin
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/seu-repositorio/saga-orchestration.git
+   git clone https://github.com/jcsalerno/microsservicos-padrao-saga-orquestrado.git
    cd saga-orchestration
    ```
 
