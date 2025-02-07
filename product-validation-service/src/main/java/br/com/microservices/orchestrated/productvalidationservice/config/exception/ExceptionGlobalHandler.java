@@ -1,5 +1,5 @@
 package br.com.microservices.orchestrated.productvalidationservice.config.exception;
-import br.com.microservices.orchestrated.orderservice.config.exception.ExceptionDetails;
+import br.com.microservices.orchestrated.productvalidationservice.config.exception.ExceptionDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
