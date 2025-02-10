@@ -6,10 +6,8 @@ import jakarta.xml.bind.ValidationException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
-
 import static org.springframework.util.ObjectUtils.isEmpty;
 
 @Slf4j
@@ -44,9 +42,10 @@ public class EventService {
 
     public Event findByTransactionId(String transactionId) throws ValidationException {
         return repository
-                .findTop1ByTransactionOrderByCreatedAtDesc(transactionId)
+                .findTop1ByTransactionIdOrderByCreatedAtDesc(transactionId)
                 .orElseThrow(() -> new ValidationException("Event not found by transactionId"));
     }
+
 
     private void validateEmptyFilters(EventFilters filters) throws ValidationException {
         if (isEmpty(filters.getOrderId()) && isEmpty(filters.getTransactionId())) {

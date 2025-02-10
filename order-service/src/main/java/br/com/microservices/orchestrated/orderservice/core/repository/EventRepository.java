@@ -11,5 +11,5 @@ public interface EventRepository extends MongoRepository<Event, String> {
 
     Optional<Event> findTop1ByOrderIdOrderByCreatedAtDesc(String orderId);
 
-    Optional<Event> findTop1ByTransactionOrderByCreatedAtDesc(String transactionId);
+    Optional<Event> findTop1ByTransactionIdOrderByCreatedAtDesc(String transactionId);;
 }
