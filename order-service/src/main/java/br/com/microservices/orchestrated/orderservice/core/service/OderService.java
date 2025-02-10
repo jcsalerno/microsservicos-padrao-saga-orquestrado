@@ -22,7 +22,7 @@ public class OderService {
     private final JsonUtil jsonUtil;
     private final OrderRepository repository;
 
-    public Order createOder(OrderRequest orderRequest) {
+    public Order createOrder(OrderRequest orderRequest) {
         var order = Order
                 .builder()
                 .products(orderRequest.getProducts())
@@ -47,4 +47,6 @@ public class OderService {
         eventService.save(event);
         return event;
     }
+
+
 }
