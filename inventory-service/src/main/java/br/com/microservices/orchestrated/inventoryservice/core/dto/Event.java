@@ -7,8 +7,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static sun.util.locale.LocaleUtils.isEmpty;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 @Data
 @Builder
