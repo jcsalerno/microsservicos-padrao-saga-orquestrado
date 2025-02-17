@@ -10,6 +10,37 @@ O padrão Saga garante consistência de dados em sistemas distribuídos, dividin
 
 ![img.png](img.png)
 
+# Serviços
+
+## 1. Order-Service
+Microsserviço responsável apenas por gerar um pedido inicial e receber uma notificação. Aqui teremos endpoints REST para iniciar o processo e recuperar os dados dos eventos.
+
+- **Banco de Dados**: MongoDB
+
+## 2. Orchestrator-Service
+Microsserviço responsável por orquestrar todo o fluxo de execução da Saga. Ele saberá qual microsserviço foi executado, em qual estado e qual será o próximo serviço a ser chamado. Além disso, este serviço salvará o processo dos eventos.
+
+- **Banco de Dados**: Não possui
+
+## 3. Product-Validation-Service
+Microsserviço responsável por validar se o produto informado no pedido existe e está válido. Ele armazenará a validação de um produto para o ID de um pedido.
+
+- **Banco de Dados**: PostgreSQL
+
+## 4. Payment-Service
+Microsserviço responsável por realizar um pagamento com base nos valores unitários e quantidades informadas no pedido. Ele armazenará a informação de pagamento de um pedido.
+
+- **Banco de Dados**: PostgreSQL
+
+## 5. Inventory-Service
+Microsserviço responsável por realizar a baixa do estoque dos produtos de um pedido. Ele armazenará a informação da baixa de um produto para o ID de um pedido.
+
+- **Banco de Dados**: PostgreSQL
+
+### 🚀 Deploy
+Todos os serviços da arquitetura serão inicializados através do arquivo `docker-compose.yml`.
+
+
 ### Componentes
 
 1. **Order Service (Serviço de Pedidos)**:
@@ -74,7 +105,7 @@ O padrão Saga garante consistência de dados em sistemas distribuídos, dividin
 
 3. Inicie os serviços usando Docker Compose:
    ```bash
-   docker-compose up --build
+   docker compose up --build
    ```
 
 4. Acesse os serviços:
@@ -91,17 +122,173 @@ Se preferir executar os serviços manualmente:
    mvn spring-boot:run
    ```
 
-## Testando o Fluxo da Saga
+## Execução do projeto
+1. Execução geral via automação com script em Python
+Basta executar o arquivo `build.py`. Para isto, é necessário ter o Python 3 instalado.
+Para executar, basta apenas executar o seguinte comando no diretório raiz do repositório:
+`python build.py`
+Será realizado o build de todas as aplicações, removidos todos os containers e em sequência, será rodado o `docker compose.`
 
-1. Crie um novo pedido usando o Order Service:
-   ```bash
-   curl -X POST http://localhost:8080/api/orders \
-        -H "Content-Type: application/json" \
-        -d '{"productId": "123", "quantity": 2, "paymentDetails": {...}}'
-   ```
+# Serviços e Portas
 
-2. Monitore o progresso da saga via logs ou tópicos do Kafka.
-3. Verifique o status final do pedido no Order Service.
+## Microsserviços
+
+- **Order-Service:** `3000`
+- **Orchestrator-Service:** `8080`
+- **Product-Validation-Service:** `8090`
+- **Payment-Service:** `8091`
+- **Inventory-Service:** `8092`
+
+## Infraestrutura
+
+- **Apache Kafka:** `9092`
+- **Redpanda Console:** `8081`
+
+## Bancos de Dados
+
+- **PostgreSQL (Product-DB):** `5433`
+- **PostgreSQL (Payment-DB):** `5434`
+- **PostgreSQL (Inventory-DB):** `5435`
+- **MongoDB (Order-DB):** `27017`
+
+
+# 📌 Endpoints da Saga
+
+## 🔹 Iniciar a Saga
+
+### 🟢 **Requisição**
+**Método:** `POST`  
+**URL:** `http://localhost:3000/api/order`
+
+### 📥 **Payload**
+```json
+{
+  "products": [
+    {
+      "product": {
+        "code": "COMIC_BOOKS",
+        "unitValue": 15.50
+      },
+      "quantity": 3
+    },
+    {
+      "product": {
+        "code": "BOOKS",
+        "unitValue": 9.90
+      },
+      "quantity": 1
+    }
+  ]
+}
+```
+### 📤  **Resposta**
+
+```json
+{
+"id": "64429e987a8b646915b3735f",
+"products": [
+{
+"product": {
+"code": "COMIC_BOOKS",
+"unitValue": 15.5
+},
+"quantity": 3
+},
+{
+"product": {
+"code": "BOOKS",
+"unitValue": 9.9
+},
+"quantity": 1
+}
+],
+"createdAt": "2023-04-21T14:32:56.335943085",
+"transactionId": "1682087576536_99d2ca6c-f074-41a6-92e0-21700148b519"
+}
+
+```
+
+### 🔹 **Visualizar a Saga**
+
+É possível recuperar os dados da saga pelo orderId ou pelo transactionId. O resultado será o mesmo.
+### **🟢 Requisição**
+
+Método: GET
+URL com orderId:
+
+http://localhost:3000/api/event?orderId=64429e987a8b646915b3735f
+
+URL com transactionId:
+
+http://localhost:3000/api/event?transactionId=1682087576536_99d2ca6c-f074-41a6-92e0-21700148b519
+
+### **📤 Resposta**
+```json
+{
+"id": "64429e9a7a8b646915b37360",
+"transactionId": "1682087576536_99d2ca6c-f074-41a6-92e0-21700148b519",
+"orderId": "64429e987a8b646915b3735f",
+"payload": {
+"id": "64429e987a8b646915b3735f",
+"products": [
+{
+"product": {
+"code": "COMIC_BOOKS",
+"unitValue": 15.5
+},
+"quantity": 3
+},
+{
+"product": {
+"code": "BOOKS",
+"unitValue": 9.9
+},
+"quantity": 1
+}
+],
+"totalAmount": 56.40,
+"totalItems": 4,
+"createdAt": "2023-04-21T14:32:56.335943085",
+"transactionId": "1682087576536_99d2ca6c-f074-41a6-92e0-21700148b519"
+},
+"source": "ORCHESTRATOR",
+"status": "SUCCESS",
+"eventHistory": [
+{
+"source": "ORCHESTRATOR",
+"status": "SUCCESS",
+"message": "Saga started!",
+"createdAt": "2023-04-21T14:32:56.78770516"
+},
+{
+"source": "PRODUCT_VALIDATION_SERVICE",
+"status": "SUCCESS",
+"message": "Products are validated successfully!",
+"createdAt": "2023-04-21T14:32:57.169378616"
+},
+{
+"source": "PAYMENT_SERVICE",
+"status": "SUCCESS",
+"message": "Payment realized successfully!",
+"createdAt": "2023-04-21T14:32:57.617624655"
+},
+{
+"source": "INVENTORY_SERVICE",
+"status": "SUCCESS",
+"message": "Inventory updated successfully!",
+"createdAt": "2023-04-21T14:32:58.139176809"
+},
+{
+"source": "ORCHESTRATOR",
+"status": "SUCCESS",
+"message": "Saga finished successfully!",
+"createdAt": "2023-04-21T14:32:58.248630293"
+}
+],
+"createdAt": "2023-04-21T14:32:58.28"
+}
+
+```
 
 ## Estrutura de Pastas
 
@@ -115,14 +302,10 @@ Se preferir executar os serviços manualmente:
 |-- README.md
 ```
 
-## Melhorias Futuras
-
-- Adicionar logs e monitoramento mais detalhados.
-- Implementar um mecanismo de retry para falhas transitórias.
-- Suportar fluxos adicionais com definições configuráveis de saga.
 
 ## Licença
 
-Este projeto está licenciado sob a Licença MIT. Consulte o arquivo LICENSE para mais detalhes.
+Este projeto foi desenvolvido pelo curso da Udemy: https://www.udemy.com/course/arquitetura-de-microsservicos-padrao-saga-orquestrado/?couponCode=KEEPLEARNINGBR
+Junto ao professor Victor Hugo Negrisoli
 
 
